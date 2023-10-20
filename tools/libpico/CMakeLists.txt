@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 # Enable PicoW driver support.  Compatible with standard Pico
-set(PICO_BOARD pico_w)
+set(PICO_BOARD pico)
 
 # Initialize the SDK
 pico_sdk_init()
@@ -27,13 +27,13 @@ target_compile_definitions(common INTERFACE
     PICO_RP2040_B1_SUPPORTED=1
     PICO_RP2040_B2_SUPPORTED=1
     PICO_NO_BINARY_INFO=1
-    PICO_CYW43_ARCH_POLL=1
-	CYW43_LWIP=0
-	CYW43_USE_OTP_MAC=0
-    LWIP_IPV4=1
-    LWIP_UDP=1
-    LWIP_IGMP=1
-    LWIP_CHECKSUM_CTRL_PER_NETIF=1
+    # PICO_CYW43_ARCH_POLL=1
+	# CYW43_LWIP=0
+	# CYW43_USE_OTP_MAC=0
+    # LWIP_IPV4=1
+    # LWIP_UDP=1
+    # LWIP_IGMP=1
+    # LWIP_CHECKSUM_CTRL_PER_NETIF=1
 )
 
 target_compile_options(common INTERFACE
@@ -106,17 +106,17 @@ target_compile_definitions(picow-noipv6-nobtc-noble PUBLIC
 )
 
 set(picow_link_libraries
-    common
-    cyw43_driver
-    cyw43_driver_picow
-    pico_async_context
-    pico_cyw43_driver
-    pico_cyw43_arch
-    pico_cyw43_arch_poll
-    pico_lwip
-    pico_lwip_nosys
-    pico_lwip_sntp
-    pico_stdlib
+    # common
+    # cyw43_driver
+    # cyw43_driver_picow
+    # pico_async_context
+    # pico_cyw43_driver
+    # pico_cyw43_arch
+    # pico_cyw43_arch_poll
+    # pico_lwip
+    # pico_lwip_nosys
+    # pico_lwip_sntp
+    # pico_stdlib
 )
 
 target_link_libraries(picow-noipv6-nobtc-noble

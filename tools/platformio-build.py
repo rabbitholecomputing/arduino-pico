@@ -175,10 +175,10 @@ env.Append(
 
     # link lib/libpico.a by full path, ignore libstdc++
     LIBS=[
-        File(os.path.join(FRAMEWORK_DIR, "lib", "ota.o")),
+#        File(os.path.join(FRAMEWORK_DIR, "lib", "ota.o")),
         libpico,
-        libpicow,
-        File(os.path.join(FRAMEWORK_DIR, "lib", "libbearssl.a")),
+#        libpicow,
+#        File(os.path.join(FRAMEWORK_DIR, "lib", "libbearssl.a")),
         "m", "c", stdcpp_lib, "c"]
 )
 
@@ -257,9 +257,8 @@ def configure_usb_flags(cpp_defines):
 
 def configure_network_flags(cpp_defines):
     env.Append(CPPDEFINES=[
- #  These need to be removed for DaynaPORT emulators
- #       ("PICO_CYW43_ARCH_THREADSAFE_BACKGROUND", 1),
- #       ("CYW43_LWIP", 1),
+        ("PICO_CYW43_ARCH_THREADSAFE_BACKGROUND", 1),
+        ("CYW43_LWIP", 1),
         ("LWIP_IPV4", 1),
         ("LWIP_IGMP", 1),
         ("LWIP_CHECKSUM_CTRL_PER_NETIF", 1)
@@ -287,7 +286,7 @@ if not "USE_TINYUSB" in cpp_defines:
         )
 # configure USB stuff
 configure_usb_flags(cpp_defines)
-configure_network_flags(cpp_defines)
+#configure_network_flags(cpp_defines)
 
 # ensure LWIP headers are in path after any TINYUSB distributed versions, also PicoSDK USB path headers
 env.Append(CPPPATH=[os.path.join(FRAMEWORK_DIR, "include")])
