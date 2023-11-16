@@ -95,9 +95,8 @@ target_link_libraries(pico
     pico_unique_id
     pico_util
     tinyusb
-    tinyusb_device_unmarked
+    tinyusb_host
 )
-
 add_library(picow-noipv6-nobtc-noble STATIC)
 target_compile_definitions(picow-noipv6-nobtc-noble PUBLIC
     LWIP_IPV6=0

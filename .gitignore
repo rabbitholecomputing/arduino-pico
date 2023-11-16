@@ -1,4 +1,5 @@
 .DS_Store
+.vscode
 system
 tools/dist
 docs/_build

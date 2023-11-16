@@ -156,6 +156,15 @@
                      "name": "Pimoroni Tiny2040"
                   },
                   {
+                     "name": "Rabbit Hole Computing AMT_W25X"
+                  },
+                  {
+                     "name": "Rabbit Hole Computing AMT_W25Q"
+                  },
+                  {
+                     "name": "Rabbit Hole Computing QUOKKADB_DIV4"
+                  },
+                  {
                      "name": "Silicognition RP2040-Shim"
                   },
                   {

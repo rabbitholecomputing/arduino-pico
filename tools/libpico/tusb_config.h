@@ -1,3 +1,11 @@
+/**
+ * QuokkADB
+ * Copyright (C) 2022 Rabbit Hole Computing LLC
+ * This file is derived from hathach's (tinyusb.org) TinyUSB
+ * 
+ * 4 October 2022 - Modified by Rabbit Hole Computing LLC
+ */
+
 /*
  * The MIT License (MIT)
  *
@@ -23,28 +31,28 @@
  *
  */
 
-#ifndef _TUSB_CONFIG_H_
-#define _TUSB_CONFIG_H_
+#ifndef _QUOKKADB_TUSB_CONFIG_H_
+#define _QUOKKADB_TUSB_CONFIG_H_
 
 #ifdef __cplusplus
  extern "C" {
 #endif
-
+// #include "hardware/uart.h"
 //--------------------------------------------------------------------
 // COMMON CONFIGURATION
 //--------------------------------------------------------------------
 
-#ifndef CFG_TUSB_MCU
- #define CFG_TUSB_MCU             OPT_MCU_RP2040
-#endif
-
-#define CFG_TUSB_RHPORT0_MODE     OPT_MODE_DEVICE
 #define CFG_TUSB_OS               OPT_OS_PICO
+#define CFG_TUSB_MCU              OPT_MCU_RP2040 
+#define CFG_TUSB_RHPORT0_MODE     OPT_MODE_HOST
+
+// Enable host stack 
+#define CFG_TUH_ENABLED     1
 
 // CFG_TUSB_DEBUG is defined by compiler in DEBUG build
-#ifndef CFG_TUSB_DEBUG
-#define CFG_TUSB_DEBUG           0
-#endif
+#define CFG_TUSB_DEBUG 0
+//#define CFG_TUSB_DEBUG 3
+
 
 /* USB DMA on some MCUs can only access a specific SRAM region with restriction on alignment.
  * Tinyusb use follows macros to declare transferring memory so that they can be put
@@ -62,30 +70,27 @@
 #endif
 
 //--------------------------------------------------------------------
-// DEVICE CONFIGURATION
+// HOST CONFIGURATION
 //--------------------------------------------------------------------
 
-#ifndef CFG_TUD_ENDPOINT0_SIZE
-#define CFG_TUD_ENDPOINT0_SIZE    64
-#endif
+// Size of buffer to hold descriptors and other data used for enumeration
+#define CFG_TUH_ENUMERATION_BUFSIZE 1024
 
-//------------- CLASS -------------//
-#define CFG_TUD_HID              (2)
-#define CFG_TUD_CDC              (1)
-#define CFG_TUD_MSC              (1)
-#define CFG_TUD_MIDI             (0)
-#define CFG_TUD_VENDOR           (0)
+#define CFG_TUH_HUB                 7
+// max device support (excluding hub device)
+#define CFG_TUH_DEVICE_MAX          14 // hub typically has 4 ports
+#define CFG_TUH_HID                 4 // typical keyboard + mouse device can have 3-4 HID interfaces
+#define CFG_TUH_MSC                 0
 
-#define CFG_TUD_CDC_RX_BUFSIZE  (256)
-#define CFG_TUD_CDC_TX_BUFSIZE  (256)
+#define CFG_TUH_HID_EPIN_BUFSIZE    64
+#define CFG_TUH_HID_EPOUT_BUFSIZE   64
 
-#define CFG_TUD_MSC_EP_BUFSIZE  (64)
 
-// HID buffer size Should be sufficient to hold ID (if any) + Data
-#define CFG_TUD_HID_EP_BUFSIZE  (64)
+
 
 #ifdef __cplusplus
  }
 #endif
 
-#endif /* _TUSB_CONFIG_H_ */
+#endif /* _QUOKKADB_TUSB_CONFIG_H_ */
+
