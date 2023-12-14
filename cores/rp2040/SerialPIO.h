@@ -26,7 +26,7 @@
 #include <queue>
 #include <hardware/uart.h>
 #include "CoreMutex.h"
-
+#include "PIOProgram.h"
 extern "C" typedef struct uart_inst uart_inst_t;
 
 class SerialPIO : public HardwareSerial {
