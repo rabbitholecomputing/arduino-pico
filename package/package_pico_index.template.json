@@ -214,6 +214,9 @@
                   },
                   {
                      "name": "Generic RP2040"
+                  },
+                  {
+                     "name": "Rabbit Hole Computing ZuluSCSI"
                   }
                ],
                "toolsDependencies": [
