@@ -234,6 +234,9 @@
                      "name": "WIZnet W5500-EVB-Pico"
                   },
                   {
+                     "name": "Rabbit Hole Computing ZuluIDE"
+                  },
+                  {
                      "name": "Generic RP2040"
                   }
                ],
