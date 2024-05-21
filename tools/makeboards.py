@@ -417,6 +417,7 @@ MakeBoard("pimoroni_tiny2040", "Pimoroni", "Tiny2040", "0x2e8a", "0x100a", 500, 
 MakeBoard("rhc_amt_w25x", "Rabbit Hole Computing", "AMT_W25X", "0x2e8a", "0x0042", 500, "RHC_AMT_W25X", 2, "boot2_w25x10cl_2_padded_checksum")
 MakeBoard("rhc_amt_w25q", "Rabbit Hole Computing", "AMT_W25Q", "0x2e8a", "0x0042", 500, "RHC_AMT_W25Q", 2, "boot2_w25q080_2_padded_checksum")
 MakeBoard("rhc_quokkadb_div4", "Rabbit Hole Computing", "QUOKKADB_DIV4", "0x2e8a", "0x1042", 500, "RHC_QUOKKADB_DIV4", 2, "boot2_w25q080_4_padded_checksum")
+MakeBoard("rhc_quokkm5", "Rabbit Hole Computing", "QUOKKM5", "0x2e8a", "0x1542", 500, "RHC_QUOKKM5", 2, "boot2_w25q080_2_padded_checksum")
 
 # Silicognition
 MakeBoard("silicognition_rp2040_shim", "Silicognition", "RP2040-Shim", "0x1209", "0xf502", 500, "SILICOGNITION_RP2040_SHIM", 4, "boot2_generic_03h_4_padded_checksum")
