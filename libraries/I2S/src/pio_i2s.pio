@@ -38,15 +38,15 @@ loop_mclk:
 ;                           +----- WCLK
 ;                           |+---- BCLK
     mov x, y         side 0b01
-left:
+left1:
     out pins, 1      side 0b00
-    jmp x--, left    side 0b01
+    jmp x--, left1   side 0b01
     out pins, 1      side 0b10 ; Last bit of left has WCLK change per I2S spec
 
     mov x, y         side 0b11
-right:
+right1:
     out pins, 1      side 0b10
-    jmp x--, right   side 0b11
+    jmp x--, right1  side 0b11
     out pins, 1      side 0b00 ; Last bit of right also has WCLK change
     ; Loop back to beginning...
 
@@ -59,15 +59,15 @@ right:
 ;                           +----- BCLK
 ;                           |+---- WCLK
     mov x, y         side 0b10
-left:
+left1:
     out pins, 1      side 0b00
-    jmp x--, left    side 0b10
+    jmp x--, left1    side 0b10
     out pins, 1      side 0b01 ; Last bit of left has WCLK change per I2S spec
 
     mov x, y         side 0b11
-right:
+right1:
     out pins, 1      side 0b01
-    jmp x--, right   side 0b11
+    jmp x--, right1  side 0b11
     out pins, 1      side 0b00 ; Last bit of right also has WCLK change
     ; Loop back to beginning...
 
@@ -114,15 +114,15 @@ lastbit:
 ;                           +----- WCLK
 ;                           |+---- BCLK
     mov x, y         side 0b01
-left:
+left1:
     out pins, 1      side 0b10
-    jmp x--, left    side 0b11
+    jmp x--, left1   side 0b11
     out pins, 1      side 0b10
 
     mov x, y         side 0b11
-right:
+right1:
     out pins, 1      side 0b00
-    jmp x--, right   side 0b01
+    jmp x--, right1  side 0b01
     out pins, 1      side 0b00
     ; Loop back to beginning...
 
@@ -136,15 +136,15 @@ right:
 ;                           +----- BCLK
 ;                           |+---- WCLK
     mov x, y         side 0b10
-left:
+left1:
     out pins, 1      side 0b01
-    jmp x--, left    side 0b11
+    jmp x--, left1    side 0b11
     out pins, 1      side 0b01
 
     mov x, y         side 0b11
-right:
+right1:
     out pins, 1      side 0b00
-    jmp x--, right   side 0b10
+    jmp x--, right1  side 0b10
     out pins, 1      side 0b00
     ; Loop back to beginning...
 
@@ -159,15 +159,15 @@ right:
 ;                           +----- WCLK
 ;                           |+---- BCLK
     mov x, y         side 0b00
-left:
+left1:
     in pins, 1       side 0b01
-    jmp x--, left    side 0b00
+    jmp x--, left1   side 0b00
     in pins, 1       side 0b11 ; Last bit of left has WCLK change per I2S spec
 
     mov x, y         side 0b10
-right:
+right1:
     in pins, 1       side 0b11
-    jmp x--, right   side 0b10
+    jmp x--, right1  side 0b10
     in pins, 1       side 0b01 ; Last bit of right also has WCLK change
     ; Loop back to beginning...
 
@@ -181,15 +181,15 @@ right:
 ;                           +----- BCLK
 ;                           |+---- WCLK
     mov x, y         side 0b00
-left:
+left1:
     in pins, 1       side 0b10
-    jmp x--, left    side 0b00
+    jmp x--, left1   side 0b00
     in pins, 1       side 0b11 ; Last bit of left has WCLK change per I2S spec
 
     mov x, y         side 0b01
-right:
+right1:
     in pins, 1       side 0b11
-    jmp x--, right   side 0b01
+    jmp x--, right1  side 0b01
     in pins, 1       side 0b10 ; Last bit of right also has WCLK change
     ; Loop back to beginning...
 
@@ -220,9 +220,13 @@ static inline void pio_i2s_out_program_init(PIO pio, uint sm, uint offset, uint 
 
     pio_sm_init(pio, sm, offset, &sm_config);
 
-    uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
-    pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
-    pio_sm_set_pins(pio, sm, 0); // clear pins
+    //uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
+    //pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    //pio_sm_set_pins(pio, sm, 0); // clear pins
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    pio_sm_set_set_pins(pio, sm, data_pin, 1);
+    pio_sm_set_set_pins(pio, sm, clock_pin_base, 2);
 
     pio_sm_exec(pio, sm, pio_encode_set(pio_y, bits - 2));
 }
@@ -241,9 +245,13 @@ static inline void pio_tdm_out_program_init(PIO pio, uint sm, uint offset, uint 
 
     pio_sm_init(pio, sm, offset, &sm_config);
 
-    uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
-    pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
-    pio_sm_set_pins(pio, sm, 0); // clear pins
+    //uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
+    //pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    //pio_sm_set_pins(pio, sm, 0); // clear pins
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    pio_sm_set_set_pins(pio, sm, data_pin, 1);
+    pio_sm_set_set_pins(pio, sm, clock_pin_base, 2);
 
     // Can't set constant > 31, so push and pop/mov
     pio_sm_put_blocking(pio, sm, bits * channels - 2);
@@ -268,9 +276,13 @@ static inline void pio_lsbj_out_program_init(PIO pio, uint sm, uint offset, uint
 
     pio_sm_init(pio, sm, offset, &sm_config);
 
-    uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
-    pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
-    pio_sm_set_pins(pio, sm, 0); // clear pins
+    //uint pin_mask = (1u << data_pin) | (3u << clock_pin_base);
+    //pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    //pio_sm_set_pins(pio, sm, 0); // clear pins
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    pio_sm_set_set_pins(pio, sm, data_pin, 1);
+    pio_sm_set_set_pins(pio, sm, clock_pin_base, 2);
 
     pio_sm_exec(pio, sm, pio_encode_set(pio_y, bits - 2));
 }
@@ -289,11 +301,17 @@ static inline void pio_i2s_in_program_init(PIO pio, uint sm, uint offset, uint d
 
     pio_sm_init(pio, sm, offset, &sm_config);
 
-    uint pin_mask = 3u << clock_pin_base;
-    pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
-    pio_sm_set_pins(pio, sm, 0); // clear pins
+    //uint pin_mask = 3u << clock_pin_base;
+    //pio_sm_set_pindirs_with_mask(pio, sm, pin_mask, pin_mask);
+    //pio_sm_set_pins(pio, sm, 0); // clear pins
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, false);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    pio_sm_set_set_pins(pio, sm, clock_pin_base, 2);
 
     pio_sm_exec(pio, sm, pio_encode_set(pio_y, bits - 2));
+
+    pio_sm_exec(pio, sm, pio_encode_in(pio_pins, bits)); // Shift in 1st L data
+    pio_sm_exec(pio, sm, pio_encode_in(pio_pins, bits - 1)); // Shift in 1st R data modulo one bit, avoiding bit shift from #2037
 }
 
 %}

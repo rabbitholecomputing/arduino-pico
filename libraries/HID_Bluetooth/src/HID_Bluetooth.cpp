@@ -1,4 +1,5 @@
 #include "HID_Bluetooth.h"
+#include <sdkoverride/tusb_gamepad16.h>
 
 //setup the report map.
 //more generic function to be used with BLE & BT Classis
@@ -6,7 +7,7 @@ void __SetupHIDreportmap(void (*WeakMouse)(), void (*WeakKeyboard)(), void (*Wea
     //allocate memory for the HID report descriptors. We don't use them, but need the size here.
     uint8_t desc_hid_report_mouse[] = { TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(1)) };
     uint8_t desc_hid_report_absmouse[] = { TUD_HID_REPORT_DESC_ABSMOUSE(HID_REPORT_ID(1)) };
-    uint8_t desc_hid_report_joystick[] = { TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(1)) };
+    uint8_t desc_hid_report_joystick[] = { TUD_HID_REPORT_DESC_GAMEPAD16(HID_REPORT_ID(1)) };
     uint8_t desc_hid_report_keyboard[] = { TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(1)), TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(2)) };
     int size = 0;
 
@@ -111,7 +112,7 @@ void __SetupHIDreportmap(void (*WeakMouse)(), void (*WeakKeyboard)(), void (*Wea
                 reportid++;
                 offset += sizeof(desc_hid_report_absmouse);
             }
-            uint8_t desc_local[] = { TUD_HID_REPORT_DESC_GAMEPAD(HID_REPORT_ID(reportid)) };
+            uint8_t desc_local[] = { TUD_HID_REPORT_DESC_GAMEPAD16(HID_REPORT_ID(reportid)) };
             memcpy(*reportmap + offset, desc_local, sizeof(desc_local));
         }
 
