@@ -232,9 +232,9 @@ set(picow_link_libraries
     pico_async_context
     pico_async_context_threadsafe_background
     ${xll}
-#    pico_lwip
-#    pico_lwip_nosys
-#    pico_lwip_sntp
+    pico_lwip
+    pico_lwip_nosys
+    pico_lwip_sntp
     pico_stdlib
 )
 
