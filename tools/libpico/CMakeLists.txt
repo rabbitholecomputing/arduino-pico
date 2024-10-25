@@ -56,7 +56,10 @@ if (${cpu} MATCHES "rp2040")
         PICO_FLOAT_SUPPORT_ROM_V1=1
         PICO_DOUBLE_SUPPORT_ROM_V1=1
         PICO_RP2040=1
-        PICO_CYW43_SUPPORTED=1)
+        PICO_CYW43_SUPPORTED=1
+        PICO_CYW43_ARCH_POLL=1
+        CYW43_LWIP=0
+        CYW43_USE_OTP_MAC=0)
 elseif (${cpu} MATCHES "rp2350")
     set(xcd
         CFG_TUSB_DEBUG=0
@@ -126,9 +129,6 @@ target_compile_definitions(common-${cpu} INTERFACE
     PICO_PRINTF_ALWAYS_INCLUDED=1
     PICO_FLASH_SIZE_BYTES=16777216
     PICO_NO_BINARY_INFO=1
-    PICO_CYW43_ARCH_POLL=1
-    CYW43_LWIP=0
-    CYW43_USE_OTP_MAC=0
     LWIP_IPV4=1
     LWIP_UDP=1
     LWIP_IGMP=1
@@ -223,7 +223,7 @@ target_compile_definitions(ipv4-big-${cpu} PUBLIC
 )
 
 if (${cpu} MATCHES "rp2040")
-    set(xll pico_cyw43_driver cyw43_driver cyw43_driver_picow pico_cyw43_driver pico_cyw43_arch pico_cyw43_arch_poll pico_cyw43_arch_threadsafe_background)
+    set(xll pico_cyw43_driver cyw43_driver cyw43_driver_picow pico_cyw43_driver pico_cyw43_arch pico_cyw43_arch_none pico_cyw43_arch_poll pico_cyw43_arch_threadsafe_background)
 elseif(${cpu} MATCHES "rp2350")
     set(xll)
 endif()
@@ -232,9 +232,9 @@ set(picow_link_libraries
     pico_async_context
     pico_async_context_threadsafe_background
     ${xll}
-    pico_lwip
-    pico_lwip_nosys
-    pico_lwip_sntp
+#    pico_lwip
+#    pico_lwip_nosys
+#    pico_lwip_sntp
     pico_stdlib
 )
 
