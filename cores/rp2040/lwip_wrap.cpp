@@ -26,18 +26,26 @@
 #include <lwip/dns.h>
 #include <lwip/raw.h>
 #include <lwip/timeouts.h>
+#ifdef PICO_RP2040
 #include <pico/cyw43_arch.h>
+#endif
 #include <pico/mutex.h>
 #include <sys/lock.h>
+#include "_xoshiro.h"
 
 extern void ethernet_arch_lwip_begin() __attribute__((weak));
 extern void ethernet_arch_lwip_end() __attribute__((weak));
+extern void ethernet_arch_lwip_gpio_mask() __attribute__((weak));
+extern void ethernet_arch_lwip_gpio_unmask() __attribute__((weak));
 
 auto_init_recursive_mutex(__lwipMutex); // Only for case with no Ethernet or PicoW, but still doing LWIP (PPP?)
 
 class LWIPMutex {
 public:
     LWIPMutex() {
+        if (ethernet_arch_lwip_gpio_mask)  {
+            ethernet_arch_lwip_gpio_mask();
+        }
 #if defined(ARDUINO_RASPBERRY_PI_PICO_W)
         if (rp2040.isPicoW()) {
             cyw43_arch_lwip_begin();
@@ -55,26 +63,36 @@ public:
 #if defined(ARDUINO_RASPBERRY_PI_PICO_W)
         if (rp2040.isPicoW()) {
             cyw43_arch_lwip_end();
-            return;
+        } else {
+#endif
+            if (ethernet_arch_lwip_end) {
+                ethernet_arch_lwip_end();
+            } else {
+                recursive_mutex_exit(&__lwipMutex);
+            }
+#if defined(ARDUINO_RASPBERRY_PI_PICO_W)
         }
 #endif
-        if (ethernet_arch_lwip_end) {
-            ethernet_arch_lwip_end();
-        } else {
-            recursive_mutex_exit(&__lwipMutex);
+        if (ethernet_arch_lwip_gpio_unmask) {
+            ethernet_arch_lwip_gpio_unmask();
         }
     }
 };
 
 extern "C" {
 
+    static XoshiroCpp::Xoshiro256PlusPlus *_lwip_rng = nullptr;
+    // Random number generator for LWIP
+    unsigned long __lwip_rand() {
+        return (unsigned long)(*_lwip_rng)();
+    }
+
     // Avoid calling lwip_init multiple times
     extern void __real_lwip_init();
     void __wrap_lwip_init() {
-        static bool initted = false;
-        if (!initted) {
+        if (!_lwip_rng) {
+            _lwip_rng = new XoshiroCpp::Xoshiro256PlusPlus(micros() * rp2040.getCycleCount());
             __real_lwip_init();
-            initted = true;
         }
     }
 
@@ -231,19 +249,19 @@ extern "C" {
     extern void __real_tcp_setprio(struct tcp_pcb *pcb, u8_t prio);
     void __wrap_tcp_setprio(struct tcp_pcb *pcb, u8_t prio) {
         LWIPMutex m;
-        return __real_tcp_setprio(pcb, prio);
+        __real_tcp_setprio(pcb, prio);
     }
 
     extern void __real_tcp_backlog_delayed(struct tcp_pcb* pcb);
     void __wrap_tcp_backlog_delayed(struct tcp_pcb* pcb) {
         LWIPMutex m;
-        return __real_tcp_backlog_delayed(pcb);
+        __real_tcp_backlog_delayed(pcb);
     }
 
     extern void __real_tcp_backlog_accepted(struct tcp_pcb* pcb);
     void __wrap_tcp_backlog_accepted(struct tcp_pcb* pcb) {
         LWIPMutex m;
-        return __real_tcp_backlog_accepted(pcb);
+        __real_tcp_backlog_accepted(pcb);
     }
     extern struct udp_pcb *__real_udp_new(void);
     struct udp_pcb *__wrap_udp_new(void) {
@@ -340,6 +358,18 @@ extern "C" {
     void __wrap_raw_remove(struct raw_pcb *pcb) {
         LWIPMutex m;
         __real_raw_remove(pcb);
+    }
+
+    extern struct netif *__real_netif_add(struct netif *netif, const ip4_addr_t *ipaddr, const ip4_addr_t *netmask, const ip4_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input);
+    struct netif *__wrap_netif_add(struct netif *netif, const ip4_addr_t *ipaddr, const ip4_addr_t *netmask, const ip4_addr_t *gw, void *state, netif_init_fn init, netif_input_fn input) {
+        LWIPMutex m;
+        return __real_netif_add(netif, ipaddr, netmask, gw, state, init, input);
+    }
+
+    extern void __real_netif_remove(struct netif *netif);
+    void __wrap_netif_remove(struct netif *netif) {
+        LWIPMutex m;
+        __real_netif_remove(netif);
     }
 
 }; // extern "C"

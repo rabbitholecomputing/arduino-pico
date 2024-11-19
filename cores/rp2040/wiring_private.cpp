@@ -23,29 +23,40 @@
 #include <hardware/gpio.h>
 #include <hardware/sync.h>
 #include <map>
+#include "_freertos.h"
+
 
 // Support nested IRQ disable/re-enable
+#ifndef maxIRQs
 #define maxIRQs 15
+#endif
 static uint32_t _irqStackTop[2] = { 0, 0 };
 static uint32_t _irqStack[2][maxIRQs];
 
 extern "C" void interrupts() {
-    auto core = get_core_num();
-    if (!_irqStackTop[core]) {
-        // ERROR
-        return;
+    if (__freeRTOSinitted) {
+        __freertos_task_exit_critical();
+    } else {
+        auto core = get_core_num();
+        if (!_irqStackTop[core]) {
+            // ERROR
+            return;
+        }
+        restore_interrupts(_irqStack[core][--_irqStackTop[core]]);
     }
-    restore_interrupts(_irqStack[core][--_irqStackTop[core]]);
 }
 
 extern "C" void noInterrupts() {
-    auto core = get_core_num();
-    if (_irqStackTop[core] == maxIRQs) {
-        // ERROR
-        panic("IRQ stack overflow");
+    if (__freeRTOSinitted) {
+        __freertos_task_enter_critical();
+    } else {
+        auto core = get_core_num();
+        if (_irqStackTop[core] == maxIRQs) {
+            // ERROR
+            panic("IRQ stack overflow");
+        }
+        _irqStack[core][_irqStackTop[core]++] = save_and_disable_interrupts();
     }
-
-    _irqStack[core][_irqStackTop[core]++] = save_and_disable_interrupts();
 }
 
 // Only 1 GPIO IRQ callback for all pins, so we need to look at the pin it's for and
@@ -76,15 +87,22 @@ static std::map<pin_size_t, CBInfo> _map;
 
 void _gpioInterruptDispatcher(uint gpio, uint32_t events) {
     (void) events;
+
     // Only need to lock around the std::map check, not the whole IRQ callback
-    CoreMutex m(&_irqMutex);
-    if (m) {
-        auto irq = _map.find(gpio);
-        if (irq != _map.end()) {
-            auto cb = irq->second;
-            cb.callback();
+    CBInfo *cb;
+    {
+        CoreMutex m(&_irqMutex);
+        if (m) {
+            auto irq = _map.find(gpio);
+            if (irq == _map.end()) {
+                return;
+            }
+            cb = &irq->second;
+        } else {
+            return;
         }
     }
+    cb->callback();
 }
 
 // To be called when appropriately protected w/IRQ and mutex protects

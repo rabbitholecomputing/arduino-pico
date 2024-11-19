@@ -27,6 +27,11 @@
 
 void ethernet_arch_lwip_begin() __attribute__((weak));
 void ethernet_arch_lwip_end() __attribute__((weak));
+void ethernet_arch_lwip_gpio_mask() __attribute__((weak));
+void ethernet_arch_lwip_gpio_unmask() __attribute__((weak));
+
+void __addEthernetGPIO(int pin);
+void __removeEthernetGPIO(int pin);
 
 // Internal Ethernet helper functions
 void __startEthernetContext();
@@ -39,3 +44,6 @@ int hostByName(const char *aHostname, IPAddress &aResult, int timeout_ms = 5000)
 
 // Set the LWIP polling time (default 50ms).  Lower polling times == lower latency but higher CPU usage
 void lwipPollingPeriod(int ms);
+
+// Sets the global netif state change callback
+void __setStateChangeCallback(std::function<void(struct netif *)> s);

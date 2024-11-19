@@ -31,12 +31,10 @@ extern bool __isFreeRTOS;
 extern volatile bool __freeRTOSinitted;
 
 extern "C" {
-#ifndef INC_FREERTOS_H
     struct QueueDefinition; /* Using old naming convention so as not to break kernel aware debuggers. */
     typedef struct QueueDefinition   * QueueHandle_t;
     typedef QueueHandle_t SemaphoreHandle_t;
     typedef int32_t BaseType_t;
-#endif
 
     extern bool __freertos_check_if_in_isr() __attribute__((weak));
 
@@ -56,5 +54,8 @@ extern "C" {
 
     extern void __freertos_idle_other_core() __attribute__((weak));
     extern void __freertos_resume_other_core() __attribute__((weak));
+
+    extern void __freertos_task_exit_critical() __attribute__((weak));
+    extern void __freertos_task_enter_critical() __attribute__((weak));
 }
 extern SemaphoreHandle_t __get_freertos_mutex_for_ptr(mutex_t *m, bool recursive = false);

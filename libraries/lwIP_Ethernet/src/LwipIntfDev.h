@@ -51,7 +51,23 @@
 #endif
 
 
-extern "C" void cyw43_hal_generate_laa_mac(__unused int idx, uint8_t buf[6]);
+// Dup'd to avoid CYW43 dependency
+// Generate a mac address if one is not set in otp
+static void _cyw43_hal_generate_laa_mac(__unused int idx, uint8_t buf[6]) {
+    pico_unique_board_id_t board_id;
+    pico_get_unique_board_id(&board_id);
+    memcpy(buf, &board_id.id[2], 6);
+    buf[0] &= (uint8_t)~0x1; // unicast
+    buf[0] |= 0x2; // locally administered
+}
+
+
+
+enum EthernetLinkStatus {
+    Unknown,
+    LinkON,
+    LinkOFF
+};
 
 template<class RawDev>
 class LwipIntfDev: public LwipIntf, public RawDev {
@@ -61,8 +77,13 @@ public:
         memset(&_netif, 0, sizeof(_netif));
     }
 
+    //The argument order for ESP is not the same as for Arduino. However, there is compatibility code under the hood
+    //to detect Arduino arg order, and handle it correctly.
     bool config(const IPAddress& local_ip, const IPAddress& arg1, const IPAddress& arg2,
                 const IPAddress& arg3 = IPADDR_NONE, const IPAddress& dns2 = IPADDR_NONE);
+
+    // two and one parameter version. 2nd parameter is DNS like in Arduino. IPv4 only
+    bool config(IPAddress local_ip, IPAddress dns = IPADDR_NONE);
 
     // default mac-address is inferred from esp8266's STA interface
     bool begin(const uint8_t* macAddress = nullptr, const uint16_t mtu = DEFAULT_MTU);
@@ -73,6 +94,10 @@ public:
         return &_netif;
     }
 
+    uint8_t* macAddress(uint8_t* mac) {
+        memcpy(mac, &_netif.hwaddr, 6);
+        return mac;
+    }
     IPAddress localIP() const {
         return IPAddress(ip4_addr_get_u32(ip_2_ip4(&_netif.ip_addr)));
     }
@@ -81,6 +106,17 @@ public:
     }
     IPAddress gatewayIP() const {
         return IPAddress(ip4_addr_get_u32(ip_2_ip4(&_netif.gw)));
+    }
+    IPAddress dnsIP(int n = 0) const {
+        return IPAddress(dns_getserver(n));
+    }
+    void setDNS(IPAddress dns1, IPAddress dns2 = INADDR_ANY) {
+        if (dns1.isSet()) {
+            dns_setserver(0, dns1);
+        }
+        if (dns2.isSet()) {
+            dns_setserver(1, dns2);
+        }
     }
 
     // 1. Currently when no default is set, esp8266-Arduino uses the first
@@ -107,7 +143,7 @@ public:
     // ICMP echo, returns TTL
     int ping(IPAddress host, uint8_t ttl, uint32_t timeout = 5000);
 
-    int hostByName(const char* aHostname, IPAddress& aResult, int timeout);
+    int hostByName(const char* aHostname, IPAddress& aResult, int timeout = 15000);
 
     inline void setSPISpeed(int mhz) {
         setSPISettings(SPISettings(mhz, MSBFIRST, SPI_MODE0));
@@ -117,9 +153,20 @@ public:
         _spiSettings = s;
     }
 
+    uint32_t packetsReceived() {
+        return _packetsReceived;
+    }
+    uint32_t packetsSent() {
+        return _packetsSent;
+    }
+
+
     // ESP8266WiFi API compatibility
 
     wl_status_t status();
+
+    // Arduino Ethernet compatibility
+    EthernetLinkStatus linkStatus();
 
 protected:
     err_t netif_init();
@@ -129,6 +176,8 @@ protected:
     static err_t netif_init_s(netif* netif);
     static err_t linkoutput_s(netif* netif, struct pbuf* p);
     static void  netif_status_callback_s(netif* netif);
+    static void _irq(void *param);
+
 public:
     // called on a regular basis or on interrupt
     err_t handlePackets();
@@ -152,6 +201,9 @@ protected:
 
     // Packet handler number
     int _phID = -1;
+
+    uint32_t _packetsReceived = 0;
+    uint32_t _packetsSent = 0;
 };
 
 
@@ -165,8 +217,8 @@ u8_t LwipIntfDev<RawDev>::_pingCB(void *arg, struct raw_pcb *pcb, struct pbuf *p
     (void) addr;
     LwipIntfDev<RawDev> *w = (LwipIntfDev<RawDev> *)arg;
     struct icmp_echo_hdr *iecho;
-    if (pbuf_header(p, -20) == 0) {
-        iecho = (struct icmp_echo_hdr *)p->payload;
+    if (p->len > 20) {
+        iecho = (struct icmp_echo_hdr *)((uint8_t*)p->payload + 20);
         if ((iecho->id == w->_ping_id) && (iecho->seqno == htons(w->_ping_seq_num))) {
             w->_ping_ttl = pcb->ttl;
             pbuf_free(p);
@@ -249,9 +301,32 @@ bool LwipIntfDev<RawDev>::config(const IPAddress& localIP, const IPAddress& gate
     }
     return true;
 }
+
+template<class RawDev>
+bool LwipIntfDev<RawDev>::config(IPAddress local_ip, IPAddress dns) {
+
+    if (!local_ip.isSet()) {
+        return config(INADDR_ANY, INADDR_ANY, INADDR_ANY);
+    }
+    if (!local_ip.isV4()) {
+        return false;
+    }
+    IPAddress gw(local_ip);
+    gw[3] = 1;
+    if (!dns.isSet()) {
+        dns = gw;
+    }
+    return config(local_ip, gw, IPAddress(255, 255, 255, 0), dns);
+}
+
 extern char wifi_station_hostname[];
 template<class RawDev>
 bool LwipIntfDev<RawDev>::begin(const uint8_t* macAddress, const uint16_t mtu) {
+    if (_started) {
+        // ERROR - Need to ::end before calling ::begin again
+        return false;
+    }
+
     lwip_init();
     __startEthernetContext();
 
@@ -277,7 +352,7 @@ bool LwipIntfDev<RawDev>::begin(const uint8_t* macAddress, const uint16_t mtu) {
 #if 1
         // forge a new mac-address from the esp's wifi sta one
         // I understand this is cheating with an official mac-address
-        cyw43_hal_generate_laa_mac(0, _macAddress);
+        _cyw43_hal_generate_laa_mac(0, _macAddress);
 #else
         // https://serverfault.com/questions/40712/what-range-of-mac-addresses-can-i-safely-use-for-my-virtual-machines
         memset(_macAddress, 0, 6);
@@ -310,7 +385,9 @@ bool LwipIntfDev<RawDev>::begin(const uint8_t* macAddress, const uint16_t mtu) {
         return false;
     }
 
-    _phID = __addEthernetPacketHandler(std::bind(&LwipIntfDev<RawDev>::handlePackets, this));
+    if (_intrPin < 0) {
+        _phID = __addEthernetPacketHandler([this] { this->handlePackets(); });
+    }
 
     if (localIP().v4() == 0) {
         // IP not set, starting DHCP
@@ -337,6 +414,7 @@ bool LwipIntfDev<RawDev>::begin(const uint8_t* macAddress, const uint16_t mtu) {
 #endif
 #if LWIP_IPV6_DHCP6_STATELESS
     err_t __res = dhcp6_enable_stateless(&_netif);
+    (void) __res; // Not used except for debug
     DEBUGV("LwipIntfDev: Enabled DHCP6 stateless: %d\n", __res);
 #endif
 
@@ -344,7 +422,11 @@ bool LwipIntfDev<RawDev>::begin(const uint8_t* macAddress, const uint16_t mtu) {
 
     if (_intrPin >= 0) {
         if (RawDev::interruptIsPossible()) {
-            // attachInterrupt(_intrPin, [&]() { this->handlePackets(); }, FALLING);
+            noInterrupts(); // Ensure this is atomically set up
+            pinMode(_intrPin, INPUT);
+            attachInterruptParam(_intrPin, _irq, RawDev::interruptMode(), (void*)this);
+            __addEthernetGPIO(_intrPin);
+            interrupts();
         } else {
             ::printf((PGM_P)F(
                          "lwIP_Intf: Interrupt not implemented yet, enabling transparent polling\r\n"));
@@ -357,15 +439,30 @@ bool LwipIntfDev<RawDev>::begin(const uint8_t* macAddress, const uint16_t mtu) {
 
 template<class RawDev>
 void LwipIntfDev<RawDev>::end() {
-    __removeEthernetPacketHandler(_phID);
+    if (_started) {
+        if (_intrPin < 0) {
+            __removeEthernetPacketHandler(_phID);
+        } else {
+            detachInterrupt(_intrPin);
+            __removeEthernetGPIO(_intrPin);
+        }
 
-    RawDev::end();
+        RawDev::end();
 
-    netif_remove(&_netif);
-    memset(&_netif, 0, sizeof(_netif));
-    _started = false;
+        netif_remove(&_netif);
+
+        _started = false;
+    }
 }
 
+template<class RawDev>
+void LwipIntfDev<RawDev>::_irq(void *param) {
+    LwipIntfDev *d = static_cast<LwipIntfDev*>(param);
+    ethernet_arch_lwip_begin();
+    d->handlePackets();
+    sys_check_timeouts();
+    ethernet_arch_lwip_end();
+}
 
 template<class RawDev>
 wl_status_t LwipIntfDev<RawDev>::status() {
@@ -373,11 +470,16 @@ wl_status_t LwipIntfDev<RawDev>::status() {
 }
 
 template<class RawDev>
+EthernetLinkStatus LwipIntfDev<RawDev>::linkStatus() {
+    return RawDev::isLinkDetectable() ? _started && RawDev::isLinked() ? LinkON : LinkOFF : Unknown;
+}
+
+template<class RawDev>
 err_t LwipIntfDev<RawDev>::linkoutput_s(netif* netif, struct pbuf* pbuf) {
     LwipIntfDev* lid = (LwipIntfDev*)netif->state;
     ethernet_arch_lwip_begin();
     uint16_t len = lid->sendFrame((const uint8_t*)pbuf->payload, pbuf->len);
-
+    lid->_packetsSent++;
 #if PHY_HAS_CAPTURE
     if (phy_capture) {
         phy_capture(lid->_netif.num, (const char*)pbuf->payload, pbuf->len, /*out*/ 1,
@@ -428,12 +530,16 @@ err_t LwipIntfDev<RawDev>::netif_init() {
     return ERR_OK;
 }
 
+extern std::function<void(struct netif *)>  _scb;
 template<class RawDev>
 void LwipIntfDev<RawDev>::netif_status_callback() {
     check_route();
     if (connected()) {
         sntp_stop();
         sntp_init();
+    }
+    if (_scb) {
+        _scb(&_netif);
     }
 }
 
@@ -490,6 +596,8 @@ err_t LwipIntfDev<RawDev>::handlePackets() {
             pbuf_free(pbuf);
             return ERR_BUF;
         }
+
+        _packetsReceived++;
 
         err_t err = _netif.input(pbuf, &_netif);
 
