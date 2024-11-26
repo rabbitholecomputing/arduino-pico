@@ -16,9 +16,11 @@ Read the [Contributing Guide](https://github.com/earlephilhower/arduino-pico/blo
 * Raspberry Pi Pico
 * Raspberry Pi Pico W
 * Raspberry Pi Pico 2
+* Raspberry Pi Pico 2W
 * 0xCB Helios
 * Adafruit Feather RP2040
 * Adafruit Feather RP2040 SCORPIO
+* Adafruit Floppsy RP2040
 * Adafruit ItsyBitsy RP2040
 * Adafruit KB2040
 * Adafruit Macropad RP2040
@@ -30,6 +32,8 @@ Read the [Contributing Guide](https://github.com/earlephilhower/arduino-pico/blo
 * Amken Revelop 
 * Amken Revelop Plus 
 * Amken Revelop eS
+* Architeuthis Flux Jumperless
+* Architeuthis Flux Jumperless V5
 * Arduino Nano RP2040 Connect
 * ArtronShop RP2 Nano
 * Breadstick Raspberry
@@ -70,6 +74,7 @@ Read the [Contributing Guide](https://github.com/earlephilhower/arduino-pico/blo
 * nullbits Bit-C PRO
 * Pimoroni PGA2040
 * Pimoroni Pico Plus 2
+* Pimoroni Pico Plus 2W
 * Pimoroni Plasma2040
 * Pimoroni Tiny2040
 * Pimoroni Tiny2350
@@ -80,6 +85,7 @@ Read the [Contributing Guide](https://github.com/earlephilhower/arduino-pico/blo
 * Sea-Picro
 * Seeed Indicator RP2040
 * Seeed XIAO RP2040
+* Seeed XIAO RP2350
 * Silicognition RP2040-Shim
 * Solder Party RP2040 Stamp
 * Solder Party RP2350 Stamp
@@ -88,6 +94,7 @@ Read the [Contributing Guide](https://github.com/earlephilhower/arduino-pico/blo
 * SparkFun ProMicro RP2040
 * SparkFun ProMicro RP2350
 * SparkFun Thing Plus RP2040
+* SparkFun Thing Plus RP2350
 * uPesy RP2040 DevKit
 * VCC-GND YD-RP2040
 * Viyalab Mizu RP2040
@@ -99,7 +106,10 @@ Read the [Contributing Guide](https://github.com/earlephilhower/arduino-pico/blo
 * Waveshare RP2040 Matrix
 * Waveshare RP2040 PiZero
 * WIZnet W5100S-EVB-Pico
+* WIZnet W5100S-EVB-Pico2
 * WIZnet W5500-EVB-Pico
+* WIZnet W5500-EVB-Pico2
+* WIZnet W55RP20-EVB-Pico
 * WIZnet WizFi360-EVB-Pico
 * Generic RP2040 (configurable flash, I/O pins)
 * Generic RP2350 (configurable flash, I/O pins)
@@ -126,7 +136,7 @@ Read the [Contributing Guide](https://github.com/earlephilhower/arduino-pico/blo
 * Peripherals:  SPI master/slave, Wire(I2C) master/slave, dual UART, emulated EEPROM, I2S audio input/output, Servo
 * printf (i.e. debug) output over USB serial
 * Transparent use of PSRAM globals and heap (RP2350 only)
-* ARM or RISC-V (Hazard3) support for The RP2350
+* ARM or RISC-V (Hazard3) support for the RP2350
 
 The RP2040 PIO state machines (SMs) are used to generate jitter-free:
 * Servos

@@ -27,6 +27,9 @@
                      "name": "Raspberry Pi Pico 2"
                   },
                   {
+                     "name": "Raspberry Pi Pico 2W"
+                  },
+                  {
                      "name": "0xCB Helios"
                   },
                   {
@@ -81,6 +84,9 @@
                      "name": "Adafruit Feather RP2350 HSTX"
                   },
                   {
+                     "name": "Adafruit Floppsy"
+                  },
+                  {
                      "name": "Amken BunnyBoard"
                   },
                   {
@@ -91,6 +97,12 @@
                   },
                   {
                      "name": "Amken Revelop eS"
+                  },
+                  {
+                     "name": "Architeuthis Flux Jumperless"
+                  },
+                  {
+                     "name": "Architeuthis Flux Jumperless V5"
                   },
                   {
                      "name": "Arduino Nano RP2040 Connect"
@@ -228,6 +240,9 @@
                      "name": "Pimoroni PicoPlus2"
                   },
                   {
+                     "name": "Pimoroni PicoPlus2W"
+                  },
+                  {
                      "name": "Pimoroni Plasma2040"
                   },
                   {
@@ -276,6 +291,9 @@
                      "name": "SparkFun Thing Plus RP2040"
                   },
                   {
+                     "name": "SparkFun Thing Plus RP2350"
+                  },
+                  {
                      "name": "uPesy RP2040 DevKit"
                   },
                   {
@@ -283,6 +301,9 @@
                   },
                   {
                      "name": "Seeed XIAO RP2040"
+                  },
+                  {
+                     "name": "Seeed XIAO RP2350"
                   },
                   {
                      "name": "VCC-GND YD RP2040"
@@ -318,10 +339,19 @@
                      "name": "WIZnet W5100S-EVB-Pico"
                   },
                   {
+                     "name": "WIZnet W5100S-EVB-Pico2"
+                  },
+                  {
                      "name": "WIZnet WizFi360-EVB-Pico"
                   },
                   {
                      "name": "WIZnet W5500-EVB-Pico"
+                  },
+                  {
+                     "name": "WIZnet W5500-EVB-Pico2"
+                  },
+                  {
+                     "name": "WIZnet W55RP20-EVB-Pico"
                   },
                   {
                      "name": "Generic RP2040"
