@@ -106,7 +106,6 @@ elseif (${cpu} MATCHES "rp2350")
         PICO_RP2350=1
         PICO_USE_BLOCKED_RAM=0
 
-        CYW43_PIN_WL_DYNAMIC=1
         CYW43_DEFAULT_PIN_WL_REG_ON=23u
         CYW43_DEFAULT_PIN_WL_DATA_OUT=24u
         CYW43_DEFAULT_PIN_WL_DATA_IN=24u
@@ -134,6 +133,7 @@ target_compile_definitions(common-${cpu} INTERFACE
     CYW43_PIO_CLOCK_DIV_DYNAMIC=1
     CYW43_LWIP=0
     CYW43_USE_OTP_MAC=0
+    CYW43_PIN_WL_DYNAMIC=1
     ${xcd}
 )
 
