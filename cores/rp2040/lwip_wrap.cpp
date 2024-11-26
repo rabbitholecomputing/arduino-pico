@@ -26,7 +26,7 @@
 #include <lwip/dns.h>
 #include <lwip/raw.h>
 #include <lwip/timeouts.h>
-#ifdef PICO_RP2040
+#ifdef PICO_CYW43_SUPPORTED
 #include <pico/cyw43_arch.h>
 #endif
 #include <pico/mutex.h>

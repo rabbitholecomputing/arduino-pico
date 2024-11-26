@@ -227,7 +227,9 @@ set(picow_link_libraries
     pico_async_context
     pico_async_context_threadsafe_background
     pico_cyw43_driver
+    pico_cyw43_arch_none
     pico_cyw43_arch
+    pico_cyw43_arch_poll
     pico_cyw43_arch_threadsafe_background
     pico_lwip
     pico_lwip_nosys
