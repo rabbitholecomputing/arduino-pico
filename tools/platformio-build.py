@@ -367,7 +367,8 @@ def configure_usb_flags(cpp_defines):
 def configure_network_flags(cpp_defines):
     env.Append(CPPDEFINES=[
         ("PICO_CYW43_ARCH_THREADSAFE_BACKGROUND", 1),
-        ("CYW43_LWIP", 1),
+# This needs to be removed for DaynaPORT emulators
+#        ("CYW43_LWIP", 1),
         ("CYW43_PIO_CLOCK_DIV_DYNAMIC", 1),
         ("LWIP_IPV4", 1),
         ("LWIP_IGMP", 1),
