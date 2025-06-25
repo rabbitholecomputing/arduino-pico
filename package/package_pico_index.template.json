@@ -412,6 +412,9 @@
                   },
                   {
                      "name": "Generic RP2350"
+                  },
+                  {
+                     "name": "Rabbit Hole Computing ZuluSCSI Blaster"
                   }
                ],
                "toolsDependencies": [
