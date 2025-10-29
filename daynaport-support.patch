@@ -1,0 +1,245 @@
+diff --git a/include/tusb_config.h b/include/tusb_config.h
+index e867b20..88ffb3d 100644
+--- a/include/tusb_config.h
++++ b/include/tusb_config.h
+@@ -79,7 +79,7 @@
+ #define CFG_TUD_CDC_RX_BUFSIZE  (256)
+ #define CFG_TUD_CDC_TX_BUFSIZE  (256)
+ 
+-#define CFG_TUD_MSC_EP_BUFSIZE  (64)
++#define CFG_TUD_MSC_EP_BUFSIZE  (1024*4)
+ 
+ // HID buffer size Should be sufficient to hold ID (if any) + Data
+ #define CFG_TUD_HID_EP_BUFSIZE  (64)
+diff --git a/lib/core_wrap.txt b/lib/core_wrap.txt
+index 310a0af..73b3637 100644
+--- a/lib/core_wrap.txt
++++ b/lib/core_wrap.txt
+@@ -71,12 +71,6 @@
+ 
+ -Wl,--wrap=ethernet_input
+ 
+--Wl,--wrap=cyw43_cb_process_ethernet
+--Wl,--wrap=cyw43_cb_tcpip_set_link_up
+--Wl,--wrap=cyw43_cb_tcpip_set_link_down
+--Wl,--wrap=cyw43_cb_tcpip_init
+--Wl,--wrap=cyw43_cb_tcpip_deinit
+-
+ -Wl,--wrap=__stack_chk_fail
+ 
+ -Wl,--wrap=cyw43_driver_init
+diff --git a/tools/libpico/CMakeLists.txt b/tools/libpico/CMakeLists.txt
+index eae887c..58d816c 100644
+--- a/tools/libpico/CMakeLists.txt
++++ b/tools/libpico/CMakeLists.txt
+@@ -103,6 +103,9 @@ target_compile_definitions(common-${cpu} INTERFACE
+     PICO_CYW43_ARCH_DEBUG_ENABLED=1
+     CYW43_PIO_CLOCK_DIV_DYNAMIC=1
+     CYW43_PIN_WL_DYNAMIC=1
++    PICO_CYW43_ARCH_POLL=1
++    CYW43_LWIP=0
++    CYW43_USE_OTP_MAC=0
+     CYW43_DEFAULT_PIN_WL_REG_ON=23u
+     CYW43_DEFAULT_PIN_WL_DATA_OUT=24u
+     CYW43_DEFAULT_PIN_WL_DATA_IN=24u
+@@ -235,6 +238,8 @@ set(picow_link_libraries
+ #    pico_async_context_threadsafe_background
+     pico_cyw43_driver
+     pico_cyw43_arch
++    pico_cyw43_arch_none
++    pico_cyw43_arch_poll
+ #    pico_cyw43_arch_threadsafe_background
+     pico_lwip
+     pico_lwip_nosys
+diff --git a/tools/makeboards.py b/tools/makeboards.py
+index 9b826de..fa7f4c2 100755
+--- a/tools/makeboards.py
++++ b/tools/makeboards.py
+@@ -663,6 +663,9 @@ MakeBoard("pimoroni_explorer", "rp2350", "Pimoroni", "Explorer", "0x2e8a", "0x10
+ # Pintronix
+ MakeBoard("pintronix_pinmax", "rp2040", "Pintronix", "PinMax", "0x2e8a", "0x9101", 250, "PINTRONIX_PINMAX", 4, 0, "boot2_w25q080_2_padded_checksum")
+ 
++# Rabbit Hole Computing
++MakeBoard("rhc_zuluscsi_blaster", "rp2350", "Rabbit Hole Computing", "ZuluSCSI Blaster", "0x2e8a", "0x10d7", 500, "RHC_ZULUSCSI_BLASTER", 16, 0, "none", ["PICO_CYW43_SUPPORTED=1", "CYW43_PIN_WL_DYNAMIC=1"])
++
+ # RAKwireless
+ MakeBoard("rakwireless_rak11300", "rp2040", "RAKwireless", "RAK11300", "0x2e8a", "0x00c0", 500, "RAKWIRELESS_RAK11300", 2, 0, "boot2_w25q16jvxq_4_padded_checksum", None, "https://store.rakwireless.com/products/wisduo-lpwan-module-rak11300")
+ 
+diff --git a/tools/platformio-build.py b/tools/platformio-build.py
+index dd5f27c..b242baa 100755
+--- a/tools/platformio-build.py
++++ b/tools/platformio-build.py
+@@ -303,7 +303,8 @@ def configure_usb_flags(cpp_defines):
+ def configure_network_flags(cpp_defines):
+     env.Append(CPPDEFINES=[
+         ("PICO_CYW43_ARCH_THREADSAFE_BACKGROUND", 1),
+-        ("CYW43_LWIP", 1),
++# This needs to be removed for DaynaPORT emulators
++#        ("CYW43_LWIP", 1),
+         ("CYW43_PIO_CLOCK_DIV_DYNAMIC", 1),
+         ("LWIP_IPV4", 1),
+         ("LWIP_IGMP", 1),
+diff --git a/variants/rhc_zuluscsi_blaster/digital.cpp b/variants/rhc_zuluscsi_blaster/digital.cpp
+new file mode 100644
+index 0000000..79db525
+--- /dev/null
++++ b/variants/rhc_zuluscsi_blaster/digital.cpp
+@@ -0,0 +1,30 @@
++/*
++    pinMode and digitalRead/Write for the Raspberry Pi Pico W RP2040
++    Copyright (c) 2022 Earle F. Philhower, III <earlephilhower@yahoo.com>
++    This library is free software; you can redistribute it and/or
++    modify it under the terms of the GNU Lesser General Public
++    License as published by the Free Software Foundation; either
++    version 2.1 of the License, or (at your option) any later version.
++    This library is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++    Lesser General Public License for more details.
++    You should have received a copy of the GNU Lesser General Public
++    License along with this library; if not, write to the Free Software
++    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++*/
++
++#include "Arduino.h"
++#include <cyw43_wrappers.h>
++
++extern "C" void pinMode(pin_size_t pin, PinMode mode) {
++    cyw43_pinMode(pin, mode);
++}
++
++extern "C" void digitalWrite(pin_size_t pin, PinStatus val) {
++    cyw43_digitalWrite(pin, val);
++}
++
++extern "C" PinStatus digitalRead(pin_size_t pin) {
++    return cyw43_digitalRead(pin);
++}
+diff --git a/variants/rhc_zuluscsi_blaster/init.cpp b/variants/rhc_zuluscsi_blaster/init.cpp
+new file mode 100644
+index 0000000..accde58
+--- /dev/null
++++ b/variants/rhc_zuluscsi_blaster/init.cpp
+@@ -0,0 +1,21 @@
++/*
++    Initialize the Pico W WiFi driver
++    Copyright (c) 2022 Earle F. Philhower, III <earlephilhower@yahoo.com>
++    This library is free software; you can redistribute it and/or
++    modify it under the terms of the GNU Lesser General Public
++    License as published by the Free Software Foundation; either
++    version 2.1 of the License, or (at your option) any later version.
++    This library is distributed in the hope that it will be useful,
++    but WITHOUT ANY WARRANTY; without even the implied warranty of
++    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++    Lesser General Public License for more details.
++    You should have received a copy of the GNU Lesser General Public
++    License along with this library; if not, write to the Free Software
++    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++*/
++
++#include <cyw43_wrappers.h>
++
++extern "C" void initVariant() {
++    init_cyw43_wifi();
++}
+diff --git a/variants/rhc_zuluscsi_blaster/pins_arduino.h b/variants/rhc_zuluscsi_blaster/pins_arduino.h
+new file mode 100644
+index 0000000..714974f
+--- /dev/null
++++ b/variants/rhc_zuluscsi_blaster/pins_arduino.h
+@@ -0,0 +1,95 @@
++#pragma once
++
++#include <stdint.h>
++
++#include <cyw43_wrappers.h>
++
++// Pin definitions taken from:
++//    https://datasheets.raspberrypi.org/pico/pico-datasheet.pdf
++
++#define PINS_COUNT          (48u)
++#define NUM_DIGITAL_PINS    (48u)
++#define NUM_ANALOG_INPUTS   (3u)
++#define NUM_ANALOG_OUTPUTS  (0u)
++#define ADC_RESOLUTION      (12u)
++
++// LED_BUILTIN
++#define PIN_LED             (33u)
++#define LED_BUILTIN         PIN_LED
++
++// Serial
++#define PIN_SERIAL1_TX      (32u)
++#define PIN_SERIAL1_RX      (33u)
++
++#define PIN_SERIAL2_TX      (8u)
++#define PIN_SERIAL2_RX      (9u)
++
++// SPI
++#define PIN_SPI0_MISO       (32u)
++#define PIN_SPI0_MOSI       (35u)
++#define PIN_SPI0_SCK        (34u)
++#define PIN_SPI0_SS         (33u)
++
++#define PIN_SPI1_MISO       (12u)
++#define PIN_SPI1_MOSI       (15u)
++#define PIN_SPI1_SCK        (14u)
++#define PIN_SPI1_SS         (13u)
++
++// Wire
++#define PIN_WIRE0_SDA       (4u)
++#define PIN_WIRE0_SCL       (5u)
++
++#define PIN_WIRE1_SDA       (30u)
++#define PIN_WIRE1_SCL       (31u)
++
++#define SERIAL_HOWMANY      (3u)
++#define SPI_HOWMANY         (2u)
++#define WIRE_HOWMANY        (2u)
++
++#define PICO_RP2350A 0 // RP2530B
++
++/* Pins mappings for marked pins on the board */
++static const uint8_t D0 = (0u);
++static const uint8_t D1 = (1u);
++static const uint8_t D2 = (2u);
++static const uint8_t D3 = (3u);
++static const uint8_t D4 = (4u);
++static const uint8_t D5 = (5u);
++static const uint8_t D6 = (6u);
++static const uint8_t D7 = (7u);
++static const uint8_t D8 = (8u);
++static const uint8_t D9 = (9u);
++static const uint8_t D10 = (10u);
++static const uint8_t D11 = (11u);
++static const uint8_t D12 = (12u);
++static const uint8_t D13 = (13u);
++static const uint8_t D14 = (14u);
++static const uint8_t D15 = (15u);
++static const uint8_t D16 = (16u);
++static const uint8_t D17 = (17u);
++static const uint8_t D18 = (18u);
++static const uint8_t D19 = (19u);
++static const uint8_t D20 = (20u);
++static const uint8_t D21 = (21u);
++static const uint8_t D22 = (22u);
++
++static const uint8_t D26 = (40u);
++static const uint8_t D27 = (41u);
++static const uint8_t D28 = (42u);
++
++static const uint8_t A0 = (40u);
++static const uint8_t A1 = (41u);
++static const uint8_t A2 = (42u);
++
++static const uint8_t A3 = (43u);
++
++static const uint8_t SS = PIN_SPI0_SS;
++static const uint8_t MOSI = PIN_SPI0_MOSI;
++static const uint8_t MISO = PIN_SPI0_MISO;
++static const uint8_t SCK = PIN_SPI0_SCK;
++
++static const uint8_t SDA = PIN_WIRE1_SDA;
++static const uint8_t SCL = PIN_WIRE1_SCL;
++
++static const uint8_t RX = PIN_SERIAL1_RX;
++static const uint8_t TX = PIN_SERIAL1_TX;

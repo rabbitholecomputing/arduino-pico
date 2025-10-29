@@ -71,12 +71,6 @@
 
 -Wl,--wrap=ethernet_input
 
--Wl,--wrap=cyw43_cb_process_ethernet
--Wl,--wrap=cyw43_cb_tcpip_set_link_up
--Wl,--wrap=cyw43_cb_tcpip_set_link_down
--Wl,--wrap=cyw43_cb_tcpip_init
--Wl,--wrap=cyw43_cb_tcpip_deinit
-
 -Wl,--wrap=__stack_chk_fail
 
 -Wl,--wrap=cyw43_driver_init
