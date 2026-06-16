@@ -1,0 +1,75 @@
+diff --git a/.gitmodules b/.gitmodules
+index 07b2995a..a0e422d8 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -3,7 +3,7 @@
+ 	url = https://github.com/earlephilhower/ArduinoCore-API.git
+ [submodule "pico-sdk"]
+ 	path = pico-sdk
+-	url = https://github.com/raspberrypi/pico-sdk.git
++	url = https://github.com/rabbitholecomputing/pico-sdk
+ [submodule "system/pyserial"]
+ 	path = tools/pyserial
+ 	url = https://github.com/pyserial/pyserial.git
+diff --git a/include/tusb_config.h b/include/tusb_config.h
+index eeff338f..b99d52d3 100644
+--- a/include/tusb_config.h
++++ b/include/tusb_config.h
+@@ -80,7 +80,7 @@
+ #define CFG_TUD_CDC_RX_BUFSIZE  (256)
+ #define CFG_TUD_CDC_TX_BUFSIZE  (256)
+ 
+-#define CFG_TUD_MSC_EP_BUFSIZE  (64) // Max for RP2040, not OPT_MODE_HS
++#define CFG_TUD_MSC_EP_BUFSIZE  (1024*4) // Max for RP2040, not OPT_MODE_HS
+ 
+ // HID buffer size Should be sufficient to hold ID (if any) + Data
+ #define CFG_TUD_HID_EP_BUFSIZE  (64)
+diff --git a/lib/core_wrap.txt b/lib/core_wrap.txt
+index 0ca4d9df..30a05b85 100644
+--- a/lib/core_wrap.txt
++++ b/lib/core_wrap.txt
+@@ -91,9 +91,6 @@
+ 
+ -Wl,--wrap=ethernet_input
+ 
+--Wl,--wrap=cyw43_cb_process_ethernet
+--Wl,--wrap=cyw43_cb_tcpip_set_link_up
+--Wl,--wrap=cyw43_cb_tcpip_set_link_down
+ -Wl,--wrap=cyw43_cb_tcpip_init
+ -Wl,--wrap=cyw43_cb_tcpip_deinit
+ 
+diff --git a/tools/libpico/CMakeLists.txt b/tools/libpico/CMakeLists.txt
+index 9fcbc81a..3793285d 100644
+--- a/tools/libpico/CMakeLists.txt
++++ b/tools/libpico/CMakeLists.txt
+@@ -103,6 +103,7 @@ target_compile_definitions(common-${cpu} INTERFACE
+     PICO_CYW43_ARCH_DEBUG_ENABLED=1
+     CYW43_PIO_CLOCK_DIV_DYNAMIC=1
+     CYW43_PIN_WL_DYNAMIC=1
++    PICO_CYW43_ARCH_POLL=1
+     CYW43_DEFAULT_PIN_WL_REG_ON=23u
+     CYW43_DEFAULT_PIN_WL_DATA_OUT=24u
+     CYW43_DEFAULT_PIN_WL_DATA_IN=24u
+@@ -235,6 +236,8 @@ set(picow_link_libraries
+ #    pico_async_context_threadsafe_background
+     pico_cyw43_driver
+     pico_cyw43_arch
++    pico_cyw43_arch_none
++    pico_cyw43_arch_poll
+ #    pico_cyw43_arch_threadsafe_background
+     pico_lwip
+     pico_lwip_nosys
+diff --git a/tools/makeboards.py b/tools/makeboards.py
+index 6340c18e..07f99a9e 100755
+--- a/tools/makeboards.py
++++ b/tools/makeboards.py
+@@ -672,6 +672,9 @@ MakeBoard("pimoroni_explorer", "rp2350", "Pimoroni", "Explorer", "0x2e8a", "0x10
+ # Pintronix
+ MakeBoard("pintronix_pinmax", "rp2040", "Pintronix", "PinMax", "0x2e8a", "0x9101", 250, "PINTRONIX_PINMAX", 4, 0, "boot2_w25q080_2_padded_checksum")
+ 
++# Rabbit Hole Computing
++MakeBoard("rhc_zuluscsi_blaster", "rp2350", "Rabbit Hole Computing", "ZuluSCSI Blaster", "0x2e8a", "0x10d7", 500, "RHC_ZULUSCSI_BLASTER", 16, 0, "none", ["PICO_CYW43_SUPPORTED=1", "CYW43_PIN_WL_DYNAMIC=1"])
++
+ # RAKwireless
+ MakeBoard("rakwireless_rak11300", "rp2040", "RAKwireless", "RAK11300", "0x2e8a", "0x00c0", 500, "RAKWIRELESS_RAK11300", 2, 0, "boot2_w25q16jvxq_4_padded_checksum", None, "https://store.rakwireless.com/products/wisduo-lpwan-module-rak11300")
+ 

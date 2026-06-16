@@ -672,6 +672,9 @@ MakeBoard("pimoroni_explorer", "rp2350", "Pimoroni", "Explorer", "0x2e8a", "0x10
 # Pintronix
 MakeBoard("pintronix_pinmax", "rp2040", "Pintronix", "PinMax", "0x2e8a", "0x9101", 250, "PINTRONIX_PINMAX", 4, 0, "boot2_w25q080_2_padded_checksum")
 
+# Rabbit Hole Computing
+MakeBoard("rhc_zuluscsi_blaster", "rp2350", "Rabbit Hole Computing", "ZuluSCSI Blaster", "0x2e8a", "0x10d7", 500, "RHC_ZULUSCSI_BLASTER", 16, 0, "none", ["PICO_CYW43_SUPPORTED=1", "CYW43_PIN_WL_DYNAMIC=1"])
+
 # RAKwireless
 MakeBoard("rakwireless_rak11300", "rp2040", "RAKwireless", "RAK11300", "0x2e8a", "0x00c0", 500, "RAKWIRELESS_RAK11300", 2, 0, "boot2_w25q16jvxq_4_padded_checksum", None, "https://store.rakwireless.com/products/wisduo-lpwan-module-rak11300")
 

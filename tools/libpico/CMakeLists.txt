@@ -103,6 +103,7 @@ target_compile_definitions(common-${cpu} INTERFACE
     PICO_CYW43_ARCH_DEBUG_ENABLED=1
     CYW43_PIO_CLOCK_DIV_DYNAMIC=1
     CYW43_PIN_WL_DYNAMIC=1
+    PICO_CYW43_ARCH_POLL=1
     CYW43_DEFAULT_PIN_WL_REG_ON=23u
     CYW43_DEFAULT_PIN_WL_DATA_OUT=24u
     CYW43_DEFAULT_PIN_WL_DATA_IN=24u
@@ -235,6 +236,8 @@ set(picow_link_libraries
 #    pico_async_context_threadsafe_background
     pico_cyw43_driver
     pico_cyw43_arch
+    pico_cyw43_arch_none
+    pico_cyw43_arch_poll
 #    pico_cyw43_arch_threadsafe_background
     pico_lwip
     pico_lwip_nosys
