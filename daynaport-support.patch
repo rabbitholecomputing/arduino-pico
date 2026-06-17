@@ -50,11 +50,10 @@ index 9fcbc81a..3793285d 100644
      CYW43_DEFAULT_PIN_WL_REG_ON=23u
      CYW43_DEFAULT_PIN_WL_DATA_OUT=24u
      CYW43_DEFAULT_PIN_WL_DATA_IN=24u
-@@ -235,6 +236,8 @@ set(picow_link_libraries
+@@ -235,6 +236,7 @@ set(picow_link_libraries
  #    pico_async_context_threadsafe_background
      pico_cyw43_driver
      pico_cyw43_arch
-+    pico_cyw43_arch_none
 +    pico_cyw43_arch_poll
  #    pico_cyw43_arch_threadsafe_background
      pico_lwip
