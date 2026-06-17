@@ -234,7 +234,7 @@ set(picow_link_libraries
     common-${cpu}
     cyw43_driver
     cyw43_driver_picow
-    pico_async_context
+#    pico_async_context
 #    pico_async_context_threadsafe_background
     pico_cyw43_driver
     pico_cyw43_arch
